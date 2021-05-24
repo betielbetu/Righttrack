@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script>
+            var blogs=[];
+            var data = <%- JSON.stringify(data)%>;
+           
+            $().ready (()=>{
+                $("#id").val(data._id);
+              //  alert("ready: "+data._id);
+                if (data._id != "!NEW")
+                {
+                    $("#inputPassword").hide();
+                    $("#lastname").val(data.lastname);
+                    $("#firstname").val(data.firstname);
+                    $("#nickname").val(data.nickname); 
+                    $("#email").val(data.email);
+                    $("#birthdate").val(data.birthdate);  
+                    $("#blogs").val(JSON.stringify(data.blogs));  
+                    blogs = data.blogs;
+                    //showBlogs(data.blogs);               
+                }
+            })
+            function addBlog()
+            {
+                const msg = $("#blogText").val();
+                const private = $("#blogPrivate").prop("checked") ;
+                const access =private?1:0;
+                const blog ={text: msg, access: access};
+                blogs.push (blog);
+                $("#blogs").val(JSON.stringify(blogs));
+                alert("added");
+            }
+            function comment ()
+            {
+                const data ={
+                    email: "bob@test.com",
+                    index:1,
+                    commnet:"test comment"
+                }
+                $.ajax({
+                    url: '/comments',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function(response){
+                        
+                        console.log(response);
+                        alert("response");
+                    }
+                });
+            }
+            function showBlogs ()
+            {
+                blogs.forEach ((blog) => {
+                
+                });
+            }
+            function formSubmit(frm)
+            {
+
+            }
+
+            function deleteBlog (idx)
+            {
+                $.get("/delete/"+idx, (msg)=>{
+                    //alert(msg);
+                    alert("deleted");
+                    window.location.reload();
+                })
+            }
+        </script>
+    </head>
+    <body>
+        <p><a href='/search'>Search</a> | <a href='/logout'>Logout</a></p>
+        <form action='addUser' method='post'>
+            <input name='id' id="id" type='hidden'/>
+            <p>Username:<br/> <input type='text' name='username' id='username'/></p>
+            
+            <p>Email:<br/> <input type='text' name='email' id='email'/></p>
+            <p id='inputPassword'>Password: <br/><input type='password' name='password' id='password'/></p>
+            <p id='inputPassword'>Password: <br/><input type='password' name='password2' id='password2'/></p>
+
+            <p><input type='submit' value='Submit'/></p>         
+        </form>
+        <div>
+            <p>Blog: <input type='text' id='blogText'/><input type='checkbox' id='blogPrivate' value='1'/> Private
+            <input type='button' value='Add' onClick='addBlog()'/>
+            </p>
+        </div>
+        <div id='divBlogs'>
+        <ol>
+           
+        <% 
+        if (data.blogs.length>0){
+            data.blogs.forEach ((blog, i) => {%>
+            <li><a href='javascript:deleteBlog(<%=i%>)'>[X]</a><%= blog.text%>
+          
+            </li>
+        <%}
+        )};%>
+        </ol>
+    </div>
+    </body>
+</html>

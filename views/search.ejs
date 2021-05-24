@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script>
+            var member;
+            var blogIndex=-1;
+            $().ready(()=>{
+                $("#divBlogComment").hide();
+            });
+            function findMember()
+            {
+                const em = $("#email").val();
+                $("#divContent").html("");
+                $("#currentBlog").html("");
+                $.get("/member/"+em, (content)=>{
+                    member=content;
+                    let html = "<ol>";
+                    content.blogs.forEach ((blog, i)=>{
+                        if (blog.access==0)
+                        {
+                            let c="";
+                            if (blog["comments"])
+                            {
+                                blog.comments.forEach((comment)=>{
+                                    c+="<br/>"+comment.text;
+                                });
+                            }
+                            html +="<li><a href='javascript:blogComment("+i+")''>"+blog.text+"</a>"+c+"</li>";
+                        }
+                    });
+                    html +="</ol>";
+                    $("#divContent").html(html);
+                });
+            }
+            function sendComment ()
+            {
+                const data ={
+                    email: $("#email").val(),
+                    index:blogIndex,
+                    comment: $("#blogComment").val()
+                }
+                alert(data.comment);
+                $.post("/comments",data, 
+                function (resp){
+                    //console.log(resp);
+                    alert(resp);
+                    window.location.reload();
+                }
+                );
+            }
+            function blogComment (idx)
+            {
+                blogIndex=idx;
+                let text = "<b><u>"+member.blogs[idx].text+":</u></b>";
+                if (member.blogs[idx]["comments"])
+                {
+                    member.blogs[idx].comments.forEach((comment)=>{
+                        let c = `From: ${comment.commentBy} - ${comment.text}`
+                        text+="<br/>"+c;
+                    });
+                }
+                $("#currentBlog").html(text);
+                $("#divBlogComment").show();
+            }
+</script>
+</head>
+<body>
+    <p><a href='/home'>Home</a> | <a href='/logout'>Logout</a></p>
+<p>Member Email: <input type='text' id='email'/> <input type='button' value='Find' onClick='findMember()'/></p>
+
+<div id='divContent'>
+
+</div>
+<div id='currentBlog'></div>
+<div id='divBlogComment'>
+    <textarea id='blogComment'></textarea>
+    <input type='button' onClick='sendComment()' value='Send'/>
+</div>
+
+</body>
+</html>
