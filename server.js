@@ -67,10 +67,10 @@ app.post("/login", (req, res)=>{
 			 ssn=req.session;
              ssn.user=user;
 			 
-			res.send({status: 1, message:"User Logged in "});
+			res.send(user);
 			res.end();
 		}else{
-            res.send({status: -1, message:"login failed "});
+            res.send({roleId: -1, message:"login failed "});
             res.end();
 		}
 	});
@@ -79,10 +79,11 @@ app.get("/currentUser", (req, res)=>{
 	try {
 		const user=ssn.user;
 		if (user==null){
-			res.end("not logged in");
+            res.json("{_id: '-1', roleId: -1, message: 'not logged in'}");
+            res.end();
 			return;
 		}
-		user.password="***";
+		user.password="***"
 		res.send(user);
 		res.end();
 	}catch (e){
@@ -119,7 +120,7 @@ app.post("/addUser", (req, res)=>{
 	//mongoose.model('users').create(user);
 	
 })
-app.get("/addFood", (req, res)=>{
+app.post("/addFood", (req, res)=>{
 	user=getCurrentUser();
 	if (user==null)
 	{
@@ -127,17 +128,19 @@ app.get("/addFood", (req, res)=>{
 		return;
 	}
     //addFood?name=Icecream&carbs=30&fat=50&protein=20&calories=290
-    /*
+    
 	const food ={
 		date: new Date(),
-		name: req.query.name,
-		carbs: req.query.name,
-		fat: req.query.fat,
-		protein: req.query.protein,
-		calories: req.query.calories
+        name: req.body.foodName,
+        info: { 
+		carbs: req.body.carbs,
+		fat: req.body.fat,
+		protein: req.body.protein,
+        calories: req.body.calories
+        }
     }
-    */
-    const food = { name: 'Cottage Cheese', info: { carbs: 44, fat: 50, protein: 10, calories: 179 } };
+    console.log ("ADD FOOD", food);
+   // const food = { name: 'Cottage Cheese' };
 /*
 	if (!foodValidate(food))
 	{
@@ -149,7 +152,11 @@ app.get("/addFood", (req, res)=>{
 		u.foodLog.push(food);
         u.save();
         console.log (u);
-		res.end("item added");
+		ssn=req.session;
+             ssn.user=u;
+			 
+			res.send(u);
+			res.end();
 	});
 	//mongoose.model('users').create(user);
 	
@@ -192,11 +199,36 @@ app.post ("/addFoodLog", (req, res)=>{
 	mongoose.model('users').findOne ({username: user.username},(err,user)=>{
 			user.foodLog.push(obj);
 			user.save((err,user)=>{
-			res.end("Food blog added");
+			res.end(user);
 		});
 	});
 	//res.cookie('contact', obj).send("Sent");
 
+});
+app.get ("/remove",(req, res)=>{
+    const idx = parseInt(req.query.idx);
+    var user=getCurrentUser();
+	if (user==null)
+	{
+		res.end("user not logged in");
+	}
+    mongoose.model('users').findOne ({username: user.username},(err,user)=>{
+        let food=[];
+        res.send(user);
+        for (i=0;i<user.foodLog.lengh;i++)
+        {
+            res.send(user.foodLog[i])
+            if (i!=idx){
+                res.send(user.foodLog[i])
+                food.push(user.foodLog[i]);
+            }
+        }
+        user.foodLog=food;
+        user.save((err,user)=>{
+            res.end("Food blog added");
+        });
+});
+   // res.end(idx);
 });
 app.get("/index",(req, res)=>{
     res.sendFile(path.join(__dirname, './public', 'index.html'));
